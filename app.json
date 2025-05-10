@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Seekr",
+    "slug": "seekr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "supabaseUrl": "https://qwakvvzvdhjtaamhyzlw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3YWt2dnp2ZGhqdGFhbWh5emx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3ODE4MTUsImV4cCI6MjA2MjM1NzgxNX0.0SCnRCW1qNbzPkNbcMH1M6qdqMpaUfpfyyztfyrCMCQ"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.seekr.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.seekr.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "seekr"
+  }
+} 
