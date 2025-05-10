@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 const PEXELS_API_URL = 'https://api.pexels.com/videos';
 
@@ -23,7 +24,7 @@ export const fetchTravelVideos = async (page: number = 1, perPage: number = 10):
   try {
     const response = await axios.get(`${PEXELS_API_URL}/search`, {
       headers: {
-        Authorization: process.env.PEXELS_API_KEY!,
+        Authorization: Constants.expoConfig?.extra?.pexelsApiKey!,
       },
       params: {
         query: 'travel',

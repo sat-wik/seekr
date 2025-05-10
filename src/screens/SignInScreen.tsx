@@ -1,14 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Animated, Alert, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, RootStackNavigation } from '../types/navigation';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../services/supabase';
+import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
+import { Linking } from 'react-native';
 
 type SignInScreenProps = {
   navigation: RootStackNavigation;
@@ -20,54 +22,34 @@ function SignInScreen({ navigation }: SignInScreenProps) {
   const [password, setPassword] = useState<string>('');
   const [showErrors, setShowErrors] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [shakeAnimation, setShakeAnimation] = useState<boolean>(false);
-  const [isEmailValid, setIsEmailValid] = useState<boolean>(false);
-  const [isPasswordValid, setIsPasswordValid] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
   const { width } = useWindowDimensions();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.IOS_GOOGLE_CLIENT_ID!,
-    redirectUri: Google.makeRedirectUri({
-      scheme: 'expo-go',
-    }),
-  }, {
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
-    revocationEndpoint: 'https://oauth2.googleapis.com/revoke'
-  });
-
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      const result = await promptAsync();
+      
+      // Start web-based authentication
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${Constants.expoConfig?.extra?.supabaseUrl}/auth/v1/callback?redirect_to=${encodeURIComponent('seekr://auth')}`,
+          scopes: 'email profile'
+        },
+      });
 
-      if (result.type === 'success') {
-        const { data: { url }, error: googleSignInError } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            },
-          },
-        });
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
 
-        if (googleSignInError) {
-          Alert.alert('Error', googleSignInError.message);
-          setIsLoading(false);
-          return;
-        }
-
-        if (!url) {
-          Alert.alert('Error', 'Failed to sign in with Google');
-          setIsLoading(false);
-          return;
-        }
-
-        navigation.navigate('Welcome');
+      if (data.url) {
+        // Open the URL in the browser
+        await Linking.openURL(data.url);
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
@@ -85,42 +67,64 @@ function SignInScreen({ navigation }: SignInScreenProps) {
     return password.length >= 6;
   };
 
-  const handleEmailChange = (text: string): void => {
+  const handleEmailChange = (text: string) => {
     setEmail(text);
-    setIsEmailValid(validateEmail(text));
   };
 
-  const handlePasswordChange = (text: string): void => {
+  const handlePasswordChange = (text: string) => {
     setPassword(text);
-    setIsPasswordValid(validatePassword(text));
   };
 
-  const handleSignIn = async (): Promise<void> => {
-    if (!isEmailValid || !isPasswordValid) {
-      setError('Please enter a valid email and password');
-      setShakeAnimation(true);
-      return;
-    }
-
+  const handleSignIn = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      let isValid = true;
+      let errorMessage = '';
+
+      // Validate email
+      if (!email) {
+        isValid = false;
+        errorMessage = 'Please enter an email address';
+        setEmailError(true);
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        isValid = false;
+        errorMessage = 'Please enter a valid email address';
+        setEmailError(true);
+      } else {
+        setEmailError(false);
+      }
+
+      // Validate password
+      if (!password) {
+        isValid = false;
+        errorMessage = 'Please enter a password';
+        setPasswordError(true);
+      } else {
+        setPasswordError(false);
+      }
+
+      if (!isValid) {
+        setError(errorMessage);
+        return;
+      }
+
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) {
-        throw signInError;
+        setError(signInError.message);
+        return;
       }
 
-      if (signInData?.user) {
-        navigation.navigate('Main');
+      if (user) {
+        navigation.navigate('Welcome');
       }
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message);
+    } catch (error) {
+      setError('An error occurred during sign in');
     } finally {
       setIsLoading(false);
     }
@@ -148,7 +152,7 @@ function SignInScreen({ navigation }: SignInScreenProps) {
               placeholder="Email"
               value={email}
               onChangeText={handleEmailChange}
-              style={[styles.input, !isEmailValid && styles.inputError]}
+              style={[styles.input, emailError && styles.inputError]}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -160,7 +164,7 @@ function SignInScreen({ navigation }: SignInScreenProps) {
               placeholder="Password"
               value={password}
               onChangeText={handlePasswordChange}
-              style={[styles.input, !isPasswordValid && styles.inputError]}
+              style={[styles.input, passwordError && styles.inputError]}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoCorrect={false}
@@ -196,7 +200,7 @@ function SignInScreen({ navigation }: SignInScreenProps) {
             isLoading && styles.signInButtonDisabled,
           ]}
           onPress={handleSignIn}
-          disabled={isLoading || !isEmailValid || !isPasswordValid}
+          disabled={isLoading || emailError || passwordError}
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
@@ -310,10 +314,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: typography.body1.fontSize,
     color: colors.text.primary,
+    borderColor: 'transparent',
+    borderWidth: 1,
   },
   inputError: {
-    borderColor: colors.error,
-    borderWidth: 1,
+    borderColor: 'red',
+    borderWidth: 2,
   },
   errorContainer: {
     width: '100%',

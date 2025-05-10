@@ -1,11 +1,12 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
+  Auth: undefined;
   SignIn: undefined;
   SignUp: undefined;
-  ForgotPassword: undefined;
   Welcome: undefined;
   AIWelcome: undefined;
+  ForgotPassword: undefined;
   Main: undefined;
   ActivityDetails: { activityId: string };
   ItineraryBuilder: { tripId: string };
