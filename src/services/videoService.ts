@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-const PEXELS_API_KEY = 'c674dCWag2k05EqtVbLUHB6WCYHsrLvllYwyU2MOyiR0cOcf97MEm1G6'; // You'll need to get this from https://www.pexels.com/api/
 const PEXELS_API_URL = 'https://api.pexels.com/videos';
 
 export type Video = {
@@ -24,7 +23,7 @@ export const fetchTravelVideos = async (page: number = 1, perPage: number = 10):
   try {
     const response = await axios.get(`${PEXELS_API_URL}/search`, {
       headers: {
-        Authorization: PEXELS_API_KEY,
+        Authorization: process.env.PEXELS_API_KEY!,
       },
       params: {
         query: 'travel',
