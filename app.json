@@ -15,6 +15,9 @@
       "**/*"
     ],
     "extra": {
+      "supabaseUrl": "${EXPO_PUBLIC_SUPABASE_URL}",
+      "supabaseAnonKey": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}",
+      "supabaseServiceRoleKey": "${EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY}",
       "pexelsApiKey": "${EXPO_PUBLIC_PEXELS_API_KEY}"
     },
     "ios": {
