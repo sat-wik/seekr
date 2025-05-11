@@ -15,10 +15,7 @@
       "**/*"
     ],
     "extra": {
-      "supabaseUrl": "${SUPABASE_URL}",
-      "supabaseAnonKey": "${SUPABASE_ANON_KEY}",
-      "supabaseServiceRoleKey": "${SUPABASE_SERVICE_ROLE_KEY}",
-      "pexelsApiKey": "${PEXELS_API_KEY}"
+      "pexelsApiKey": "${EXPO_PUBLIC_PEXELS_API_KEY}"
     },
     "ios": {
       "supportsTablet": true,
