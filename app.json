@@ -15,10 +15,10 @@
       "**/*"
     ],
     "extra": {
-      "supabaseUrl": "https://qwakvvzvdhjtaamhyzlw.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3YWt2dnp2ZGhqdGFhbWh5emx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3ODE4MTUsImV4cCI6MjA2MjM1NzgxNX0.0SCnRCW1qNbzPkNbcMH1M6qdqMpaUfpfyyztfyrCMCQ",
-      "supabaseServiceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3YWt2dnp2ZGhqdGFhbWh5emx3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0Njc4MTgxNSwiZXhwIjoyMDYyMzU3ODE1fQ.4XzefBIbhzhmZFTTfeE031JxfVALXBAvLy_6dATHe9U",
-      "pexelsApiKey": "c674dCWag2k05EqtVbLUHB6WCYHsrLvllYwyU2MOyiR0cOcf97MEm1G6"
+      "supabaseUrl": "${SUPABASE_URL}",
+      "supabaseAnonKey": "${SUPABASE_ANON_KEY}",
+      "supabaseServiceRoleKey": "${SUPABASE_SERVICE_ROLE_KEY}",
+      "pexelsApiKey": "${PEXELS_API_KEY}"
     },
     "ios": {
       "supportsTablet": true,
