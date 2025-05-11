@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import Constants from 'expo-constants';
 
-// Get configuration from environment variables
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceRoleKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+// Get the environment variables from process.env
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseServiceRoleKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
   throw new Error('Missing Supabase configuration. Please check your .env file');

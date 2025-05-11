@@ -20,11 +20,6 @@
 *.swp
 *.swo
 
-# environment files
-.env
-.env.local
-.env.*.local
-
 # debug
 npm-debug.log*
 yarn-debug.log*

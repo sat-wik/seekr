@@ -14,9 +14,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "extra": {
-      "pexelsApiKey": "${EXPO_PUBLIC_PEXELS_API_KEY}"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.seekr.app"
@@ -33,6 +30,14 @@
     },
     "scheme": "seekr",
     "config": {
+      "google": {
+        "scheme": "seekr",
+        "redirect": {
+          "ios": "seekr://auth/google/callback",
+          "android": "seekr://auth/google/callback",
+          "web": "seekr://auth/google/callback"
+        }
+      },
       "auth": {
         "redirect": {
           "ios": "seekr://auth/confirm",
