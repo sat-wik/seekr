@@ -4,8 +4,6 @@ export type RootStackParamList = {
   Auth: undefined;
   SignIn: undefined;
   SignUp: undefined;
-  Welcome: undefined;
-  AIWelcome: undefined;
   ForgotPassword: undefined;
   Main: undefined;
   ActivityDetails: { activityId: string };

@@ -48,7 +48,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${Constants.expoConfig?.extra?.supabaseUrl}/auth/v1/callback?redirect_to=${encodeURIComponent('seekr://auth')}`,
+          redirectTo: 'seekr://auth/google/callback',
           scopes: 'email profile'
         },
       });
@@ -154,39 +154,25 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         return;
       }
 
-      if (!validateEmail(email)) {
-        setError('Please enter a valid email address');
-        return;
-      }
-
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-
       // Sign up with Supabase
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            email,
-            profile_picture: '',
-          },
-        },
+          emailRedirectTo: 'https://seekr-web-auth.vercel.app/confirm'
+        }
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
+      if (error) {
+        setError(error.message);
         return;
       }
 
-      navigation.navigate('Welcome');
+      // Show success message and wait for email confirmation
+      Alert.alert('Success', 'Check your email for the confirmation link.');
+
+      // Navigate to Main screen
+      navigation.navigate('Main');
     } catch (error) {
       console.error('Sign up error:', error);
       setError('An unexpected error occurred. Please try again.');

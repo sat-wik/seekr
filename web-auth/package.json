@@ -1,0 +1,12 @@
+{
+  "name": "seekr-web-auth",
+  "version": "1.0.0",
+  "description": "Seekr web-based email confirmation page",
+  "main": "index.html",
+  "scripts": {
+    "deploy": "vercel"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

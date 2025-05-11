@@ -14,7 +14,6 @@
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
-    "@shopify/react-native-skia": "0.1.221",
     "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.9.0",
     "expo": "~50.0.0",
@@ -39,7 +38,8 @@
     "react-native-screens": "~3.29.0",
     "react-native-svg": "14.1.0",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "@shopify/react-native-skia": "0.1.221"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

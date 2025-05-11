@@ -20,11 +20,46 @@ export default function App() {
   useEffect(() => {
     const handleAuthRedirect = async (url: string) => {
       if (url.startsWith('seekr://auth')) {
-        // Handle the authentication redirect
-        const authResponse = await supabase.auth.getSession();
-        if (authResponse.data.session) {
-          // User is authenticated, navigate to the home screen
-          navigate('Main');
+        try {
+          // Extract the path from the URL
+          const path = url.split('://')[1].split('/')[1];
+          
+          // Handle different types of authentication redirects
+          if (path === 'confirm') {
+            // Handle email confirmation
+            const token = url.split('token=')[1];
+            const email = url.split('email=')[1]?.split('&')[0];
+            
+            if (!email) {
+              console.error('Email not found in confirmation URL');
+              return;
+            }
+
+            const { data, error } = await supabase.auth.verifyOtp({
+              token,
+              email,
+              type: 'email'
+            });
+
+            if (error) {
+              console.error('Email confirmation error:', error);
+              return;
+            }
+
+            // After successful confirmation, get the session
+            const authResponse = await supabase.auth.getSession();
+            if (authResponse.data.session) {
+              navigate('Main');
+            }
+          } else if (path === 'google/callback') {
+            // Handle Google OAuth callback
+            const authResponse = await supabase.auth.getSession();
+            if (authResponse.data.session) {
+              navigate('Main');
+            }
+          }
+        } catch (error) {
+          console.error('Auth redirect error:', error);
         }
       }
     };
@@ -36,12 +71,15 @@ export default function App() {
 
     // Add URL listener
     Linking.addEventListener('url', (event: any) => {
-      handleUrl(event.url);
+      const url = event.url;
+      if (url && url.startsWith('seekr://auth')) {
+        handleUrl(url);
+      }
     });
 
     // Check for initial URL
     Linking.getInitialURL().then((url) => {
-      if (url) {
+      if (url && url.startsWith('seekr://auth')) {
         handleAuthRedirect(url);
       }
     });

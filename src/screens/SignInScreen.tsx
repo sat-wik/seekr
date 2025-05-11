@@ -37,7 +37,7 @@ function SignInScreen({ navigation }: SignInScreenProps) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${Constants.expoConfig?.extra?.supabaseUrl}/auth/v1/callback?redirect_to=${encodeURIComponent('seekr://auth')}`,
+          redirectTo: 'seekr://auth/google/callback',
           scopes: 'email profile'
         },
       });
@@ -110,19 +110,37 @@ function SignInScreen({ navigation }: SignInScreenProps) {
         return;
       }
 
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+      // First check if the user exists
+      const { data: { user: existingUser }, error: userError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (signInError) {
-        setError(signInError.message);
+      if (userError) {
+        setError(userError.message);
         return;
       }
 
-      if (user) {
-        navigation.navigate('Welcome');
+      if (!existingUser) {
+        setError('User not found. Please sign up first.');
+        return;
       }
+
+      // Verify the password
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        setError('Failed to verify session. Please try again.');
+        return;
+      }
+
+      if (!session) {
+        setError('Invalid credentials. Please try again.');
+        return;
+      }
+
+      // Navigate to Main if all checks pass
+      navigation.navigate('Main');
     } catch (error) {
       setError('An error occurred during sign in');
     } finally {

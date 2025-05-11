@@ -35,10 +35,21 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "seekr",
-    "host": "auth",
     "config": {
       "google": {
-        "scheme": "seekr"
+        "scheme": "seekr",
+        "redirect": {
+          "ios": "seekr://auth/google/callback",
+          "android": "seekr://auth/google/callback",
+          "web": "seekr://auth/google/callback"
+        }
+      },
+      "auth": {
+        "redirect": {
+          "ios": "seekr://auth/confirm",
+          "android": "seekr://auth/confirm",
+          "web": "seekr://auth/confirm"
+        }
       }
     },
     "deepLinking": {
