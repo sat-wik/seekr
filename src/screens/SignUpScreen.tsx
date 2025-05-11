@@ -159,7 +159,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         email,
         password,
         options: {
-          emailRedirectTo: 'https://seekr-web-auth.vercel.app/confirm'
+          emailRedirectTo: 'https://seekr-ruby.vercel.app/confirm'
         }
       });
 
