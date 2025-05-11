@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import { supabase, supabaseServiceRole } from '../services/supabase';
+import { supabase } from '../services/supabase';
 import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
+import GoogleSignIn from '../components/GoogleSignIn';
 
 interface SignUpScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
@@ -159,7 +160,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         email,
         password,
         options: {
-          emailRedirectTo: 'https://seekr-web-auth.vercel.app/confirm'
+          emailRedirectTo: 'https://seekr-app.vercel.app/confirm'
         }
       });
 
@@ -264,27 +265,24 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             </View>
           )}
 
-          <TouchableOpacity
-            style={[
-              styles.signInButton,
-              {
-                backgroundColor: '#DB4437',
-                paddingVertical: spacing.sm,
-                borderRadius: 8,
-              },
-              isLoading && styles.signInButtonDisabled,
-            ]}
-            onPress={handleSignUp}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator color={colors.text.primary} />
-              </View>
-            ) : (
-              <Text style={styles.signInButtonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.signInButton}>
+            <TouchableOpacity
+              style={[
+                styles.signInButton,
+                isLoading ? styles.signInButtonDisabled : null,
+              ]}
+              onPress={handleSignUp}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color={colors.text.primary} />
+                </View>
+              ) : (
+                <Text style={styles.signInButtonText}>Sign Up</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.orContainer}>
             <View style={styles.orLine} />
@@ -292,6 +290,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             <View style={styles.orLine} />
           </View>
 
+          <GoogleSignIn />
           <TouchableOpacity
             style={[
               styles.googleButton,
@@ -444,8 +443,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signInButtonDisabled: {
-    backgroundColor: colors.primary,
-    opacity: 0.7,
+    opacity: 0.5,
   },
   signInButtonText: {
     fontSize: typography.body1.fontSize,
@@ -469,7 +467,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: colors.border,
-    marginHorizontal: spacing.md,
+    marginHorizontal: spacing.sm,
   },
   orText: {
     color: colors.text.secondary,

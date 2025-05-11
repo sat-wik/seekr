@@ -24,7 +24,7 @@ export const fetchTravelVideos = async (page: number = 1, perPage: number = 10):
   try {
     const response = await axios.get(`${PEXELS_API_URL}/search`, {
       headers: {
-        Authorization: Constants.expoConfig?.extra?.pexelsApiKey!,
+        Authorization: process.env.EXPO_PUBLIC_PEXELS_API_KEY!,
       },
       params: {
         query: 'travel',
