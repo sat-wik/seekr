@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
 
-// Get configuration from app.json
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
-const supabaseServiceRoleKey = Constants.expoConfig?.extra?.supabaseServiceRoleKey;
+// Get configuration from environment variables
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase configuration. Please check your app.json');
+  throw new Error('Missing Supabase configuration. Please check your .env file');
 }
 
 // Regular client for authenticated operations

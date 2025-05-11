@@ -15,9 +15,6 @@
       "**/*"
     ],
     "extra": {
-      "supabaseUrl": "https://qwakvvzvdhjtaamhyzlw.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3YWt2dnp2ZGhqdGFhbWh5emx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3ODE4MTUsImV4cCI6MjA2MjM1NzgxNX0.0SCnRCW1qNbzPkNbcMH1M6qdqMpaUfpfyyztfyrCMCQ",
-      "supabaseServiceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3YWt2dnp2ZGhqdGFhbmh5emx3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0Njc4MTgxNSwiZXhwIjoyMDYyMzU3ODE1fQ.4XzefBIbhzhmZFTTfeE031JxfVALXBAvLy_6dATHe9U",
       "pexelsApiKey": "${EXPO_PUBLIC_PEXELS_API_KEY}"
     },
     "ios": {
@@ -36,14 +33,6 @@
     },
     "scheme": "seekr",
     "config": {
-      "google": {
-        "scheme": "seekr",
-        "redirect": {
-          "ios": "seekr://auth/google/callback",
-          "android": "seekr://auth/google/callback",
-          "web": "seekr://auth/google/callback"
-        }
-      },
       "auth": {
         "redirect": {
           "ios": "seekr://auth/confirm",
