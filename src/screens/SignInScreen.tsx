@@ -380,8 +380,7 @@ const styles = StyleSheet.create({
 
   },
   signInButtonDisabled: {
-    backgroundColor: colors.primary,
-    opacity: 0.7,
+    opacity: 0.5,
   },
   signInButtonText: {
     fontSize: typography.body1.fontSize,

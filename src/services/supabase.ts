@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
-// Get the environment variables from process.env
+// Get the environment variables from app.json
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseServiceRoleKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || '';
 
-if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase configuration. Please check your .env file');
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase configuration. Please check your app.json');
 }
 
 // Regular client for authenticated operations
@@ -19,9 +18,3 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Service role client for RLS bypass operations
-export const supabaseServiceRole = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
