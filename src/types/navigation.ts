@@ -6,6 +6,7 @@ export type RootStackParamList = {
   SignUp: undefined;
   ForgotPassword: undefined;
   Main: undefined;
+  Profile: undefined;
   ActivityDetails: { activityId: string };
   ItineraryBuilder: { tripId: string };
   Booking: { activityId: string };
