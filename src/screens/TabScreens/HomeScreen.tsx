@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import { WebView } from 'react-native-webview';
 import {
   View,
   Text,
@@ -16,7 +17,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { colors, typography, spacing, borderRadius } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
-import { fetchTravelVideos, getVideoUrl, Video as PexelsVideo } from '../../services/videoService';
+import { fetchYouTubeShorts, getYouTubeShortEmbedUrl } from '../../services/youtubeService';
 import { ReelProvider, useReelContext } from '../../contexts/ReelContext';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
@@ -25,14 +26,15 @@ const { width, height } = Dimensions.get('window');
 
 type Reel = {
   id: string;
-  username: string;
-  avatar: string;
-  video: string;
-  caption: string;
-  likes: number;
-  comments: number;
-  location?: string;
-  music?: string;
+  title: string;
+  thumbnail: string;
+  videoUrl: string;
+  channel: {
+    name: string;
+    link: string;
+  };
+  views: string;
+  duration: string;
 };
 
 const styles = StyleSheet.create({
@@ -44,16 +46,24 @@ const styles = StyleSheet.create({
   reelContainer: {
     flex: 1,
     backgroundColor: colors.background.default,
+    width: width,
+    height: height * 0.9,
   },
   video: {
     flex: 1,
-    width: width,
-    height: height,
-    resizeMode: ResizeMode.COVER,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'black',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Lighter overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  contentContainer: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+    backgroundColor: colors.background.default
   },
   reelContent: {
     flex: 1,
@@ -71,9 +81,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: spacing[2],
   },
   username: {
@@ -147,11 +157,51 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     marginTop: spacing[1],
   },
+  actionCount: {
+    color: colors.text.inverse,
+    fontSize: typography.fontSize.sm,
+    marginTop: spacing[1],
+  },
   loadingContainer: {
     padding: spacing[4],
   },
   flatList: {
     flex: 1,
+  },
+
+  controls: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    padding: spacing[4],
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: spacing[3],
+  },
+  likeCount: {
+    marginLeft: spacing[2],
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
+  },
+  commentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentCount: {
+    marginLeft: spacing[2],
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareCount: {
+    marginLeft: spacing[2],
+    color: colors.text.primary,
+    fontSize: typography.fontSize.base,
   },
 });
 
@@ -160,123 +210,137 @@ interface ReelProps {
   index: number;
 }
 
-const Reel: React.FC<ReelProps> = memo(({ item, index }) => {
-  const videoRef = useRef<Video>(null);
+const ReelItem: React.FC<ReelProps> = ({ item, index }: ReelProps) => {
+  const videoRef = useRef<WebView>(null);
   const { activeIndex } = useReelContext();
 
   useEffect(() => {
     if (videoRef.current && activeIndex === index) {
-      videoRef.current.playAsync();
+      // videoRef.current.playAsync();
     } else if (videoRef.current) {
-      videoRef.current.pauseAsync();
+      // videoRef.current.pauseAsync();
     }
   }, [activeIndex, index]);
 
   // Memoize expensive computations
-  const memoizedCaption = useMemo(() => item.caption, [item.caption]);
-  const memoizedLocation = useMemo(() => item.location, [item.location]);
-  const memoizedMusic = useMemo(() => item.music, [item.music]);
-  const memoizedLikes = useMemo(() => item.likes, [item.likes]);
-  const memoizedComments = useMemo(() => item.comments, [item.comments]);
-
-  // Memoize the header content
-  const HeaderContent = useMemo(() => (
-    <View style={styles.reelHeader}>
-      <View style={styles.userInfo}>
-        <Image
-          source={{ uri: item.avatar }}
-          style={styles.avatar}
-        />
-        <Text style={styles.username}>{item.username}</Text>
-      </View>
-      <View style={styles.followButtonContainer}>
-        <TouchableOpacity style={{
-          borderWidth: 1,
-          borderColor: colors.text.inverse,
-          paddingHorizontal: spacing[3],
-          paddingVertical: spacing[1],
-          borderRadius: borderRadius.sm,
-          backgroundColor: 'transparent',
-        }}>
-          <Text style={styles.followButtonText}>Follow</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  ), [item.avatar, item.username]);
-
-  // Memoize the info content
-  const InfoContent = useMemo(() => (
-    <View style={styles.reelInfo}>
-      <Text style={styles.caption}>{memoizedCaption}</Text>
-      {memoizedLocation && (
-        <View style={styles.locationContainer}>
-          <Ionicons name="location" size={16} color={colors.text.inverse} />
-          <Text style={styles.location}>{memoizedLocation}</Text>
-        </View>
-      )}
-      {memoizedMusic && (
-        <View style={styles.musicContainer}>
-          <Ionicons name="musical-notes" size={16} color={colors.text.inverse} />
-          <Text style={styles.music}>{memoizedMusic}</Text>
-        </View>
-      )}
-    </View>
-  ), [memoizedCaption, memoizedLocation, memoizedMusic]);
-
-  // Memoize the action buttons
-  const ActionButtons = useMemo(() => (
-    <View style={styles.reelActions}>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="heart-outline" size={32} color={colors.text.inverse} />
-        <Text style={styles.actionText}>{memoizedLikes}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="chatbubble-outline" size={28} color={colors.text.inverse} />
-        <Text style={styles.actionText}>{memoizedComments}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="paper-plane-outline" size={28} color={colors.text.inverse} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="bookmark-outline" size={28} color={colors.text.inverse} />
-      </TouchableOpacity>
-    </View>
-  ), [memoizedLikes, memoizedComments]);
+  const memoizedCaption = useMemo(() => item.title, [item.title]);
+  const memoizedLocation = useMemo(() => item.channel.name, [item.channel.name]);
 
   return (
     <View style={styles.reelContainer}>
-      <Video
+      <WebView
         ref={videoRef}
-        source={{ uri: item.video }}
+        source={{
+          uri: item.videoUrl,
+          html: `
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+              iframe {
+                width: 100%;
+                height: 100%;
+                border: none;
+              }
+            </style>
+            <iframe src="${item.videoUrl}" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+          `
+        }}
         style={styles.video}
-        resizeMode={ResizeMode.COVER}
-        isLooping
-        isMuted
-        useNativeControls={false}
+        allowsFullscreenVideo={true}
+        mediaPlaybackRequiresUserAction={false}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
       />
-      <View style={styles.overlay}>
-        <View style={styles.reelContent}>
-          {HeaderContent}
-          <View style={styles.reelFooter}>
-            <View style={styles.reelContentRow}>
-              {InfoContent}
-              {ActionButtons}
+      <View style={styles.overlay} />
+      <View style={styles.reelContent}>
+        <View style={styles.reelHeader}>
+          <View style={styles.userInfo}>
+            <Image
+              source={{ uri: item.channel.link }}
+              style={styles.avatar}
+            />
+            <Text style={styles.username}>{item.channel.name}</Text>
+          </View>
+          <TouchableOpacity style={styles.followButton}>
+            <Text style={styles.followButtonText}>Follow</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.reelFooter}>
+          <View style={styles.reelContentRow}>
+            <View style={styles.reelInfo}>
+              <Text style={styles.caption}>{memoizedCaption}</Text>
+              <View style={styles.locationContainer}>
+                <Ionicons name="location" size={16} color={colors.text.inverse} />
+                <Text style={styles.location}>{memoizedLocation}</Text>
+              </View>
+              <View style={styles.musicContainer}>
+                <Ionicons name="musical-note" size={16} color={colors.text.inverse} />
+                <Text style={styles.music}>Music</Text>
+              </View>
+            </View>
+            <View style={styles.reelActions}>
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons name="heart" size={24} color={colors.text.inverse} />
+                <Text style={styles.actionCount}>1.2K</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons name="chatbubble" size={24} color={colors.text.inverse} />
+                <Text style={styles.actionCount}>500</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons name="share-social" size={24} color={colors.text.inverse} />
+                <Text style={styles.actionCount}>100</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </View>
     </View>
   );
-});
+};
+
+const MemoizedReelItem = memo(ReelItem);
+
+export { MemoizedReelItem };
 
 const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const navigation = useNavigation();
   const [reels, setReels] = useState<Reel[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList<Reel>>(null);
   const { setActiveIndex } = useReelContext();
+
+  useEffect(() => {
+    const fetchReels = async () => {
+      try {
+        const shorts = await fetchYouTubeShorts('travel shorts');
+        console.log(shorts);
+        const reels = shorts.map((short) => ({
+          id: short.link.split('v=')[1],
+          title: short.title,
+          thumbnail: short.thumbnail,
+          videoUrl: getYouTubeShortEmbedUrl(short.link),
+          channel: short.channel,
+          views: short.views,
+          duration: short.duration
+        }));
+        setReels(reels);
+      } catch (error) {
+        console.error('Error fetching reels:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReels();
+  }, []);
 
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0) {
@@ -284,91 +348,27 @@ const HomeScreen: React.FC = () => {
     }
   }, [setActiveIndex]);
 
-  useEffect(() => {
-    if (reels.length === 0) {
-      setLoading(true);
-      loadVideos();
-    }
-  }, [reels]);
-
-  const loadVideos = async () => {
-    try {
-      const videos = await fetchTravelVideos(page);
-      
-      if (videos.length === 0) {
-        // No more videos to load
-        setHasMore(false);
-        setLoading(false);
-        return;
-      }
-
-      const newReels = videos.map((video: PexelsVideo) => ({
-        id: video.id.toString(),
-        username: video.user.name,
-        avatar: `https://i.pravatar.cc/150?u=${video.user.name}`,
-        video: getVideoUrl(video),
-        caption: `Exploring the world 🌍 #travel #adventure #${video.user.name.toLowerCase().replace(/\s+/g, '')}`,
-        likes: Math.floor(Math.random() * 10000),
-        comments: Math.floor(Math.random() * 1000),
-        location: 'Travel Destination',
-        music: 'Travel Vibes - Ambient Mix',
-      }));
-
-      setReels(prevReels => [...prevReels, ...newReels]);
-      setPage(prevPage => prevPage + 1);
-      setHasMore(true);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading videos:', error);
-      setLoading(false);
-    }
-  };
-
   const onEndReached = useCallback(() => {
-    if (!loading && hasMore) {
-      loadVideos();
-    }
-  }, [loading, hasMore]);
+    // Load more videos
+  }, []);
 
   return (
     <View style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={reels}
-        renderItem={({ item, index }) => <Reel item={item} index={index} />}
-        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }: { item: Reel; index: number }) => (
+          <MemoizedReelItem item={item} index={index} />
+        )}
+        keyExtractor={(item: Reel) => item.id}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
+          itemVisiblePercentThreshold: 50
         }}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          <View style={styles.loadingContainer}>
-            {loading && reels.length > 0 ? (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={colors.primary.main} />
-                <Text style={{ color: colors.text.inverse, marginTop: spacing[2] }}>
-                  Loading more videos...
-                </Text>
-              </View>
-            ) : !hasMore ? (
-              <Text style={{ color: colors.text.inverse, textAlign: 'center' }}>
-                No more videos to load
-              </Text>
-            ) : null}
-          </View>
-        }
-        style={styles.flatList}
-        decelerationRate="fast"
-        snapToAlignment="start"
-        snapToInterval={height}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'flex-start',
-          alignItems: 'stretch'
-        }}
+        contentContainerStyle={{ flexGrow: 1 }}
       />
     </View>
   );
