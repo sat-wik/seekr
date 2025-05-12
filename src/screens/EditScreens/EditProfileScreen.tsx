@@ -5,10 +5,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { colors, typography, spacing } from '../../theme';
 import { supabase } from '../../services/supabase';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackNavigation } from '../../types/navigation';
 
 type EditProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
-export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation, route }) => {
+export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ route }) => {
+  const navigation = useNavigation<RootStackNavigation>();
   const { user } = route.params;
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValues, setTempValues] = useState({
@@ -19,12 +22,19 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
 
   const handleTextChange = (field: string, value: string) => {
     setTempValues(prev => ({ ...prev, [field]: value }));
-    saveField(field);
   };
 
   React.useEffect(() => {
     fetchUser();
   }, []);
+
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchUser();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchUser = async () => {
     try {
@@ -41,6 +51,11 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
       console.error('Error fetching user:', error);
     }
   };
+
+  // Refresh user data when the component receives new props
+  React.useEffect(() => {
+    fetchUser();
+  }, [navigation]);
 
   const startEditing = (field: string) => {
     setEditingField(field);
@@ -66,8 +81,21 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
     }
   };
 
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <View style={styles.headerSpacer} />
+      </View>
       <ScrollView style={styles.container}>
         <Text style={styles.sectionTitle}>Profile Information</Text>
 
@@ -88,9 +116,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
             ) : (
               <>
                 <Text style={styles.infoValue}>{tempValues.fullName || 'Not set'}</Text>
-                <TouchableOpacity onPress={() => setEditingField('fullName')}>
-                  <Ionicons name="pencil" size={20} color={colors.primary.main} />
-                </TouchableOpacity>
+                <Ionicons name="pencil" size={20} color={colors.primary.main} />
               </>
             )}
           </TouchableOpacity>
@@ -114,9 +140,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
             ) : (
               <>
                 <Text style={styles.infoValue}>{tempValues.email || 'Not set'}</Text>
-                <TouchableOpacity onPress={() => setEditingField('email')}>
-                  <Ionicons name="pencil" size={20} color={colors.primary.main} />
-                </TouchableOpacity>
+                <Ionicons name="pencil" size={20} color={colors.primary.main} />
               </>
             )}
           </TouchableOpacity>
@@ -140,9 +164,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation
             ) : (
               <>
                 <Text style={styles.infoValue}>{tempValues.phone || 'Not set'}</Text>
-                <TouchableOpacity onPress={() => setEditingField('phone')}>
-                  <Ionicons name="pencil" size={20} color={colors.primary.main} />
-                </TouchableOpacity>
+                <Ionicons name="pencil" size={20} color={colors.primary.main} />
               </>
             )}
           </TouchableOpacity>
@@ -156,6 +178,22 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing[4],
+    backgroundColor: colors.background.default,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: typography.fontSize.lg,
+    fontWeight: 'bold' as const,
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 24,
   },
   container: {
     flex: 1,
@@ -184,9 +222,10 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     flex: 1,
-    marginLeft: spacing[3],
     fontSize: typography.fontSize.base,
-    color: colors.text.secondary,
+    color: colors.text.primary,
+    minWidth: 200,
+    maxWidth: 300,
   },
   editableRow: {
     flex: 1,
@@ -195,7 +234,12 @@ const styles = StyleSheet.create({
   },
   editableText: {
     flex: 1,
+    padding: spacing[2],
+    backgroundColor: colors.background.input,
+    borderRadius: spacing[2],
     fontSize: typography.fontSize.base,
     color: colors.text.primary,
+    minWidth: 200,
+    maxWidth: 300,
   },
 });

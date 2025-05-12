@@ -4,10 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import BottomTabNavigator from './src/navigation/BottomTabNavigator';
-import ActivityDetailsScreen from './src/screens/ActivityDetailsScreen';
-import ItineraryBuilderScreen from './src/screens/ItineraryBuilderScreen';
-import BookingScreen from './src/screens/BookingScreen';
-import BookingConfirmationScreen from './src/screens/BookingConfirmationScreen';
 import { AuthProvider } from './src/authContext';
 import { RootStackParamList } from './src/types/navigation';
 import * as Linking from 'expo-linking';
@@ -116,10 +112,6 @@ export default function App() {
           >
             <Stack.Screen name="Auth" component={AuthNavigator} />
             <Stack.Screen name="Main" component={BottomTabNavigator} />
-            <Stack.Screen name="ActivityDetails" component={ActivityDetailsScreen} />
-            <Stack.Screen name="ItineraryBuilder" component={ItineraryBuilderScreen} />
-            <Stack.Screen name="Booking" component={BookingScreen} />
-            <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </AuthProvider>

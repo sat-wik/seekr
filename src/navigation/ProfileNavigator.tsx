@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
 // Import screens
-import { ProfileScreen } from '../screens/ProfileScreen';
+import { ProfileScreen } from '../screens/TabScreens/ProfileScreen';
 import { EditNameScreen } from '../screens/EditScreens/EditNameScreen';
 import { EditEmailScreen } from '../screens/EditScreens/EditEmailScreen';
 import { EditPhoneScreen } from '../screens/EditScreens/EditPhoneScreen';

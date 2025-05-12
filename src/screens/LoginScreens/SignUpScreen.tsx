@@ -13,13 +13,13 @@ import {
   Linking 
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
-import { supabase } from '../services/supabase';
+import { RootStackParamList } from '../../types/navigation';
+import { supabase } from '../../services/supabase';
 import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SignUpScreenProps {
@@ -143,6 +143,17 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     setConfirmPasswordError(false);
   };
 
+  const generateRandomUsername = () => {
+    const adjectives = ['brave', 'bold', 'calm', 'cool', 'crazy', 'cute', 'daring', 'dynamic', 'eager', 'energetic', 'fierce', 'friendly', 'funny', 'gentle', 'happy', 'jolly', 'keen', 'lively', 'lucky', 'merry', 'nifty', 'optimistic', 'peaceful', 'quiet', 'radiant', 'shy', 'smart', 'sunny', 'swift', 'tidy', 'vivid', 'witty', 'zany'];
+    const nouns = ['bear', 'cat', 'dog', 'dragon', 'dolphin', 'elephant', 'fox', 'giraffe', 'hippo', 'kangaroo', 'koala', 'lion', 'monkey', 'panda', 'penguin', 'rabbit', 'rhino', 'sheep', 'tiger', 'whale', 'wolf'];
+    
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const number = Math.floor(Math.random() * 1000);
+    
+    return `${adjective}${noun}${number}`;
+  };
+
   const handleSignUp = async () => {
     try {
       setIsLoading(true);
@@ -154,8 +165,11 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         return;
       }
 
+      // Generate a random username
+      const username = generateRandomUsername();
+
       // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -163,13 +177,31 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         }
       });
 
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
 
-      // Show success message and wait for email confirmation
-      Alert.alert('Success', 'Check your email for the confirmation link.');
+      if (!user) {
+        setError('Failed to create user account');
+        return;
+      }
+
+      // Update user metadata with the username
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          username: username
+        }
+      });
+
+      if (updateError) {
+        setError('Failed to set username');
+        return;
+      }
+
+      // Show success message with the username
+      Alert.alert('Success', `Account created! Your username is: ${username}\nCheck your email for the confirmation link.`);
 
       // Navigate to Main screen
       navigation.navigate('Main');
@@ -193,7 +225,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../assets/logo.png')}
+              source={require('../../../assets/logo.png')}
               style={styles.logo}
             />
           </View>
@@ -264,10 +296,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             </View>
           )}
 
-          <View style={styles.signInButton}>
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[
                 styles.signInButton,
+                {
+                    backgroundColor: '#DB4437', // Google's red color
+                    paddingVertical: spacing.sm,
+                    borderRadius: 8,
+                },
                 isLoading ? styles.signInButtonDisabled : null,
               ]}
               onPress={handleSignUp}
@@ -435,10 +472,17 @@ const styles = StyleSheet.create({
     fontSize: typography.body2.fontSize,
     fontWeight: '600' as const,
   },
-  signInButton: {
+  buttonContainer: {
     width: '100%',
+    marginBottom: spacing.md,
+  },
+  signInButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
   },
   signInButtonDisabled: {
     opacity: 0.5,
@@ -449,7 +493,7 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     textAlign: 'center',
     width: '100%',
-    lineHeight: 24,
+    lineHeight: 24, // Match font size for proper vertical alignment
   },
   loadingContainer: {
     paddingVertical: spacing.sm,

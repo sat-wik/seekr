@@ -32,7 +32,17 @@ export function EditNameScreen({ navigation, route }: EditNameScreenProps) {
 
       if (updateError) throw updateError;
 
-      navigation.goBack();
+      // Refresh the user data
+      const { data: { user: updatedUser }, error: refreshError } = await supabase.auth.getUser();
+      if (refreshError) {
+        console.error('Error refreshing user data:', refreshError);
+      } else if (updatedUser) {
+        // Update the navigation params with the new name
+        navigation.setParams({ name: updatedUser.user_metadata?.full_name || '' });
+        // Go back to EditProfileScreen and then back to ProfileScreen
+        navigation.goBack();
+        setTimeout(() => navigation.goBack(), 100);
+      }
     } catch (error) {
       console.error('Error updating name:', error);
     }

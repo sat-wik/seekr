@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import { colors, typography, spacing } from '../theme';
+import { colors, typography, spacing } from '../../theme';
 
 const MapScreen = () => {
   return (

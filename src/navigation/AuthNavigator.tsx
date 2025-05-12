@@ -3,8 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
 // Import screens
-import SignInScreen from '../screens/SignInScreen';
-import SignUpScreen from '../screens/SignUpScreen';
+import SignInScreen from '../screens/LoginScreens/SignInScreen';
+import SignUpScreen from '../screens/LoginScreens/SignUpScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

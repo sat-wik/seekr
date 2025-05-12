@@ -10,10 +10,10 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, typography, spacing } from '../theme';
-import { supabase } from '../services/supabase';
+import { colors, typography, spacing } from '../../theme';
+import { supabase } from '../../services/supabase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import { RootStackParamList } from '../../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
@@ -27,6 +27,14 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     fetchUser();
   }, []);
 
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchUser();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   const fetchUser = async () => {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
@@ -38,6 +46,11 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       setLoading(false);
     }
   };
+
+  // Refresh user data when the component receives new props
+  React.useEffect(() => {
+    fetchUser();
+  }, [navigation]);
 
   const handleSignOut = async () => {
     try {
@@ -147,19 +160,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Security</Text>
-          <TouchableOpacity style={styles.option}>
-            <Ionicons name="finger-print" size={24} color={colors.primary.main} />
-            <Text style={styles.optionText}>Two-Factor Authentication</Text>
-            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.option}>
-            <Ionicons name="shield" size={24} color={colors.primary.main} />
-            <Text style={styles.optionText}>Security Settings</Text>
-            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
-          </TouchableOpacity>
-        </View>
 
         <TouchableOpacity 
           style={styles.signOutButton}
@@ -168,6 +168,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
           <Ionicons name="log-out" size={24} color={colors.text.inverse} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
+        <View style={styles.section}></View>
+        <View style={styles.section}></View>
+        <View style={styles.section}></View>
       </ScrollView>
     </SafeAreaView>
   );

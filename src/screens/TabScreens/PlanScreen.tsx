@@ -2,19 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, typography } from '../theme';
-import { PlanCard } from '../components/PlanCard';
-import { TravelPlanService } from '../services/travelPlanService';
-import { useAuth } from '../authContext';
-import { TravelPlan } from '../types/travel';
-import { RootStackParamList, RootStackNavigation } from '../types/navigation';
+import { colors, typography } from '../../theme';
+import { useAuth } from '../../authContext';
+import { TravelPlan } from '../../types/travel';
+import { RootStackParamList, RootStackNavigation } from '../../types/navigation';
 
 const PlanScreen = () => {
   const navigation = useNavigation<RootStackNavigation>();
   const { user, isLoading } = useAuth();
   const [plans, setPlans] = useState<TravelPlan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
-  const travelPlanService = new TravelPlanService();
 
   useEffect(() => {
     if (user && !isLoading) {
@@ -26,8 +23,6 @@ const PlanScreen = () => {
     try {
       setLoadingPlans(true);
       if (!user?.id) return;
-      const plans = await travelPlanService.getPlans(user.id);
-      setPlans(plans);
     } catch (error) {
       console.error('Error fetching plans:', error);
     } finally {
@@ -64,13 +59,6 @@ const PlanScreen = () => {
         <Text style={styles.emptyText}>No plans yet. Create one!</Text>
       ) : (
         <View style={styles.plansList}>
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              onPress={() => handlePlanPress(plan)}
-            />
-          ))}
         </View>
       )}
     </View>

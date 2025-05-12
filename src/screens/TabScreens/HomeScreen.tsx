@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { colors, typography, spacing, borderRadius } from '../theme';
+import { RootStackParamList } from '../../navigation/types';
+import { colors, typography, spacing, borderRadius } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
-import { fetchTravelVideos, getVideoUrl, Video as PexelsVideo } from '../services/videoService';
-import { ReelProvider, useReelContext } from '../contexts/ReelContext';
+import { fetchTravelVideos, getVideoUrl, Video as PexelsVideo } from '../../services/videoService';
+import { ReelProvider, useReelContext } from '../../contexts/ReelContext';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 

@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, RootStackNavigation } from '../types/navigation';
+import { RootStackParamList, RootStackNavigation } from '../../types/navigation';
 import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../services/supabase';
+import { supabase } from '../../services/supabase';
 import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { Linking } from 'react-native';
 
@@ -160,7 +160,7 @@ function SignInScreen({ navigation }: SignInScreenProps) {
     <View style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require('../../assets/logo.png')}
+          source={require('../../../assets/logo.png')}
           style={styles.logo}
         />
 

@@ -7,10 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 type IconName = 'home' | 'home-outline' | 'calendar' | 'calendar-outline' | 'map' | 'map-outline' | 'trophy' | 'trophy-outline' | 'person' | 'person-outline' | 'help-circle';
 
 // Import screens
-import HomeScreen from '../screens/HomeScreen';
-import PlanScreen from '../screens/PlanScreen';
-import MapScreen from '../screens/MapScreen';
-import LeaderboardScreen from '../screens/LeaderboardScreen';
+import HomeScreen from '../screens/TabScreens/HomeScreen';
+import PlanScreen from '../screens/TabScreens/PlanScreen';
+import MapScreen from '../screens/TabScreens/MapScreen';
+import LeaderboardScreen from '../screens/TabScreens/LeaderboardScreen';
 import ProfileNavigator from './ProfileNavigator';
 
 const Tab = createBottomTabNavigator();
