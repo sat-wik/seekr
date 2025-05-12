@@ -11,7 +11,7 @@ import HomeScreen from '../screens/HomeScreen';
 import PlanScreen from '../screens/PlanScreen';
 import MapScreen from '../screens/MapScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import ProfileNavigator from './ProfileNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -45,7 +45,7 @@ const BottomTabNavigator = () => {
       <Tab.Screen name="Plan" component={PlanScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );
 };

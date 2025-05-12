@@ -7,6 +7,26 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   Main: undefined;
   Profile: undefined;
+  ProfileScreen: undefined;
+  EditNameScreen: {
+    name: string;
+  };
+  EditEmailScreen: {
+    email: string;
+  };
+  EditPhoneScreen: {
+    phone: string;
+  };
+  EditProfile: { user: any };
+  ChangePassword: undefined;
+  TwoFactorAuth: undefined;
+  SecuritySettings: undefined;
+  Notifications: undefined;
+  DarkMode: undefined;
+  Language: undefined;
+  HelpCenter: undefined;
+  ContactSupport: undefined;
+  About: undefined;
   ActivityDetails: { activityId: string };
   ItineraryBuilder: { tripId: string };
   Booking: { activityId: string };

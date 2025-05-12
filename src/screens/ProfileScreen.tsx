@@ -12,15 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../theme';
 import { supabase } from '../services/supabase';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 
-interface ProfileScreenProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
-}
+type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
+export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [isEditing, setIsEditing] = React.useState(false);
@@ -73,7 +71,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
             <View style={styles.editButtonContainer}>
               <TouchableOpacity style={styles.editButton}>
-                <Ionicons name="camera" size={18} color={colors.text.inverse} />
               </TouchableOpacity>
             </View>
           </View>
@@ -82,20 +79,70 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <TouchableOpacity style={styles.option}>
-            <Ionicons name="person" size={24} color={colors.primary.main} />
-            <Text style={styles.optionText}>Profile Information</Text>
+          <Text style={styles.sectionTitle}>Profile</Text>
+          <TouchableOpacity 
+            style={styles.option}
+            onPress={() => navigation.navigate('EditProfile', { user })}
+          >
+            <Ionicons name="pencil" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Edit Profile</Text>
             <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Security</Text>
           <TouchableOpacity style={styles.option}>
             <Ionicons name="lock-closed" size={24} color={colors.primary.main} />
             <Text style={styles.optionText}>Change Password</Text>
             <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.option}>
-            <Ionicons name="mail" size={24} color={colors.primary.main} />
-            <Text style={styles.optionText}>Email Notifications</Text>
+            <Ionicons name="finger-print" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Two-Factor Authentication</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="shield" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Security Settings</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="notifications" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Notifications</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="moon" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Dark Mode</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="language" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Language</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Help & Support</Text>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="help-circle" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Help Center</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="chatbubble" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>Contact Support</Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.option}>
+            <Ionicons name="information-circle" size={24} color={colors.primary.main} />
+            <Text style={styles.optionText}>About Seekr</Text>
             <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
         </View>
@@ -177,6 +224,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 10,
+    opacity: 0.8,
   },
   editButton: {
     width: 24,
@@ -185,6 +233,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
+    opacity: 0.8,
   },
   name: {
     marginTop: spacing[2],
@@ -204,6 +253,26 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xl,
     fontWeight: '600',
     color: colors.text.primary,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary.main,
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.primary,
+    marginLeft: spacing[2],
+  },
+  infoValue: {
+    flex: 1,
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    marginLeft: 'auto',
   },
   option: {
     flexDirection: 'row',
