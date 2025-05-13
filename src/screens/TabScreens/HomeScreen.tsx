@@ -1,383 +1,392 @@
-import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
-  TouchableOpacity,
   Image,
+  TouchableOpacity,
+  Dimensions,
   FlatList,
   ActivityIndicator,
   ViewToken,
+  StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/types';
-import { colors, typography, spacing, borderRadius } from '../../theme';
-import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
-import { fetchTravelVideos, getVideoUrl, Video as PexelsVideo } from '../../services/videoService';
-import { ReelProvider, useReelContext } from '../../contexts/ReelContext';
-
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { fetchReelsByHashtag, type InstagramReel } from '../../services/instagramService';
 
 const { width, height } = Dimensions.get('window');
 
-type Reel = {
+interface Reel {
   id: string;
+  title?: string;
   username: string;
   avatar: string;
   video: string;
   caption: string;
   likes: number;
   comments: number;
-  location?: string;
-  music?: string;
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-
-  reelContainer: {
-    flex: 1,
-    backgroundColor: colors.background.default,
-  },
-  video: {
-    flex: 1,
-    width: width,
-    height: height,
-    resizeMode: ResizeMode.COVER,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Lighter overlay
-  },
-  reelContent: {
-    flex: 1,
-    padding: spacing[4],
-  },
-  reelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing[16],
-    paddingHorizontal: spacing[4],
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: spacing[2],
-  },
-  username: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    fontWeight: '600',
-  },
-  followButton: {
-    alignItems: 'center',
-  },
-  followButtonText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-  },
-  followButtonContainer: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing[1],
-  },
-  reelFooter: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing[4],
-  },
-  reelContentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: spacing[24],
-    paddingLeft: spacing[4],
-  },
-  reelActions: {
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    height: '30%',
-    marginBottom: spacing[24],
-  },
-  actionButton: {
-    alignItems: 'center',
-    marginBottom: spacing[4],
-  },
-  reelInfo: {
-    flex: 1,
-  },
-  caption: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    fontWeight: '600',
-    marginBottom: spacing[2],
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  location: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    marginLeft: spacing[2],
-  },
-  musicContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  music: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    marginLeft: spacing[2],
-  },
-  actionText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    marginTop: spacing[1],
-  },
-  loadingContainer: {
-    padding: spacing[4],
-  },
-  flatList: {
-    flex: 1,
-  },
-});
-
-interface ReelProps {
-  item: Reel;
-  index: number;
+  views?: number;
+  location: string;
+  music: string;
+  isInstagram?: boolean;
 }
 
-const Reel: React.FC<ReelProps> = memo(({ item, index }) => {
+const ReelItem = ({ item, isActive, isScreenFocused }: { item: Reel; isActive: boolean; isScreenFocused: boolean }) => {
   const videoRef = useRef<Video>(null);
-  const { activeIndex } = useReelContext();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current && activeIndex === index) {
-      videoRef.current.playAsync();
-    } else if (videoRef.current) {
-      videoRef.current.pauseAsync();
+    if (isActive && isScreenFocused) {
+      videoRef.current?.playAsync();
+    } else {
+      videoRef.current?.pauseAsync();
+      if (!isScreenFocused) {
+        videoRef.current?.setPositionAsync(0);
+      }
     }
-  }, [activeIndex, index]);
+  }, [isActive, isScreenFocused]);
 
-  // Memoize expensive computations
-  const memoizedCaption = useMemo(() => item.caption, [item.caption]);
-  const memoizedLocation = useMemo(() => item.location, [item.location]);
-  const memoizedMusic = useMemo(() => item.music, [item.music]);
-  const memoizedLikes = useMemo(() => item.likes, [item.likes]);
-  const memoizedComments = useMemo(() => item.comments, [item.comments]);
+  // Check if text needs "more" button
+  useEffect(() => {
+    if (item.caption && item.caption.length > 100) {
+      setShowMore(true);
+    }
+  }, [item.caption]);
 
-  // Memoize the header content
-  const HeaderContent = useMemo(() => (
-    <View style={styles.reelHeader}>
-      <View style={styles.userInfo}>
-        <Image
-          source={{ uri: item.avatar }}
-          style={styles.avatar}
-        />
-        <Text style={styles.username}>{item.username}</Text>
-      </View>
-      <View style={styles.followButtonContainer}>
-        <TouchableOpacity style={{
-          borderWidth: 1,
-          borderColor: colors.text.inverse,
-          paddingHorizontal: spacing[3],
-          paddingVertical: spacing[1],
-          borderRadius: borderRadius.sm,
-          backgroundColor: 'transparent',
-        }}>
-          <Text style={styles.followButtonText}>Follow</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  ), [item.avatar, item.username]);
-
-  // Memoize the info content
-  const InfoContent = useMemo(() => (
-    <View style={styles.reelInfo}>
-      <Text style={styles.caption}>{memoizedCaption}</Text>
-      {memoizedLocation && (
-        <View style={styles.locationContainer}>
-          <Ionicons name="location" size={16} color={colors.text.inverse} />
-          <Text style={styles.location}>{memoizedLocation}</Text>
-        </View>
-      )}
-      {memoizedMusic && (
-        <View style={styles.musicContainer}>
-          <Ionicons name="musical-notes" size={16} color={colors.text.inverse} />
-          <Text style={styles.music}>{memoizedMusic}</Text>
-        </View>
-      )}
-    </View>
-  ), [memoizedCaption, memoizedLocation, memoizedMusic]);
-
-  // Memoize the action buttons
-  const ActionButtons = useMemo(() => (
-    <View style={styles.reelActions}>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="heart-outline" size={32} color={colors.text.inverse} />
-        <Text style={styles.actionText}>{memoizedLikes}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="chatbubble-outline" size={28} color={colors.text.inverse} />
-        <Text style={styles.actionText}>{memoizedComments}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="paper-plane-outline" size={28} color={colors.text.inverse} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton}>
-        <Ionicons name="bookmark-outline" size={28} color={colors.text.inverse} />
-      </TouchableOpacity>
-    </View>
-  ), [memoizedLikes, memoizedComments]);
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   return (
-    <View style={styles.reelContainer}>
+    <View style={styles.videoContainer}>
       <Video
         ref={videoRef}
         source={{ uri: item.video }}
         style={styles.video}
         resizeMode={ResizeMode.COVER}
         isLooping
-        isMuted
+        shouldPlay={isActive}
         useNativeControls={false}
       />
-      <View style={styles.overlay}>
-        <View style={styles.reelContent}>
-          {HeaderContent}
-          <View style={styles.reelFooter}>
-            <View style={styles.reelContentRow}>
-              {InfoContent}
-              {ActionButtons}
-            </View>
-          </View>
+      <View style={styles.overlay} />
+      
+      {/* Right Side - Action Buttons */}
+      <View style={styles.rightActions}>
+        <View style={styles.actionButton}>
+          <Ionicons name="heart" size={32} color="white" />
+          <Text style={styles.actionText}>{item.likes?.toLocaleString() || '0'}</Text>
         </View>
+        
+        <View style={styles.actionButton}>
+          <Ionicons name="chatbubble-ellipses" size={28} color="white" />
+          <Text style={styles.actionText}>{item.comments?.toLocaleString() || '0'}</Text>
+        </View>
+        
+        <View style={styles.actionButton}>
+          <Ionicons name="send" size={28} color="white" />
+        </View>
+        
+        <View style={styles.actionButton}>
+          <Ionicons name="ellipsis-vertical" size={24} color="white" />
+        </View>
+      </View>
+      
+      {/* Bottom Left - Profile and Caption */}
+      <View style={styles.bottomLeftContainer}>
+        {isExpanded && (
+          <View style={styles.gradientBackground}>
+            <View style={StyleSheet.absoluteFill} />
+          </View>
+        )}
+        
+        <View style={styles.profileSection}>
+          <View style={styles.profileColumn}>
+            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+            <TouchableOpacity onPress={toggleExpand} style={styles.seeMoreButton}>
+              <Text style={styles.seeMoreText}>
+                {isExpanded ? 'See less' : 'See more'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.username}>@{item.username}</Text>
+        </View>
+        
+        {/* Expanded Content */}
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.caption}>{item.caption}</Text>
+            {item.location && (
+              <View style={styles.infoRow}>
+                <Ionicons name="location" size={14} color="white" />
+                <Text style={styles.infoText}>{item.location}</Text>
+              </View>
+            )}
+            {item.music && item.music !== 'Original Audio' && (
+              <View style={styles.infoRow}>
+                <Ionicons name="musical-note" size={14} color="white" />
+                <Text style={styles.infoText}>{item.music}</Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );
-});
+};
 
-const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+const ReelsScreen = () => {
   const [reels, setReels] = useState<Reel[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const flatListRef = useRef<FlatList<Reel>>(null);
-  const { setActiveIndex } = useReelContext();
+  const flatListRef = useRef<FlatList>(null);
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0) {
-      setActiveIndex(viewableItems[0].index ?? 0);
-    }
-  }, [setActiveIndex]);
-
-  useEffect(() => {
-    if (reels.length === 0) {
-      setLoading(true);
-      loadVideos();
-    }
-  }, [reels]);
-
-  const loadVideos = async () => {
+  const loadVideos = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    
     try {
-      const videos = await fetchTravelVideos(page);
+      const instagramReels = await fetchReelsByHashtag('wanderlust');
       
-      if (videos.length === 0) {
-        // No more videos to load
+      if (instagramReels && instagramReels.length > 0) {
+        const newReels: Reel[] = instagramReels.map((reel: InstagramReel) => ({
+          id: reel.id,
+          title: reel.caption?.split('\n')[0] || 'Instagram Reel',
+          username: reel.username,
+          avatar: reel.user_profile_pic || `https://i.pravatar.cc/150?u=${reel.username}`,
+          video: reel.video_url,
+          caption: reel.caption || 'Check out this reel!',
+          likes: reel.like_count || 0,
+          comments: reel.comment_count || 0,
+          views: reel.play_count,
+          location: reel.location || 'Instagram',
+          music: reel.music || 'Original Audio',
+          isInstagram: true,
+        }));
+        
+        setReels(prev => [...prev, ...newReels]);
+      } else {
         setHasMore(false);
-        setLoading(false);
-        return;
       }
-
-      const newReels = videos.map((video: PexelsVideo) => ({
-        id: video.id.toString(),
-        username: video.user.name,
-        avatar: `https://i.pravatar.cc/150?u=${video.user.name}`,
-        video: getVideoUrl(video),
-        caption: `Exploring the world 🌍 #travel #adventure #${video.user.name.toLowerCase().replace(/\s+/g, '')}`,
-        likes: Math.floor(Math.random() * 10000),
-        comments: Math.floor(Math.random() * 1000),
-        location: 'Travel Destination',
-        music: 'Travel Vibes - Ambient Mix',
-      }));
-
-      setReels(prevReels => [...prevReels, ...newReels]);
-      setPage(prevPage => prevPage + 1);
-      setHasMore(true);
-      setLoading(false);
     } catch (error) {
-      console.error('Error loading videos:', error);
+      console.error('Error loading reels:', error);
+    } finally {
       setLoading(false);
-    }
-  };
-
-  const onEndReached = useCallback(() => {
-    if (!loading && hasMore) {
-      loadVideos();
     }
   }, [loading, hasMore]);
 
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0) {
+      setActiveIndex(viewableItems[0].index || 0);
+    }
+  }, []);
+
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 50,
+  };
+
+  const isFocused = useIsFocused();
+
+  const renderItem = useCallback(({ item, index }: { item: Reel; index: number }) => (
+    <ReelItem 
+      item={item} 
+      isActive={index === activeIndex} 
+      isScreenFocused={isFocused}
+    />
+  ), [activeIndex, isFocused]);
+
+  const keyExtractor = useCallback((item: Reel) => item.id, []);
+
+  const getItemLayout = useCallback((_: any, index: number) => ({
+    length: height,
+    offset: height * index,
+    index,
+  }), []);
+
+  if (loading && reels.length === 0) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
       <FlatList
         ref={flatListRef}
         data={reels}
-        renderItem={({ item, index }) => <Reel item={item} index={index} />}
-        keyExtractor={(item) => item.id}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          <View style={styles.loadingContainer}>
-            {loading && reels.length > 0 ? (
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={colors.primary.main} />
-                <Text style={{ color: colors.text.inverse, marginTop: spacing[2] }}>
-                  Loading more videos...
-                </Text>
-              </View>
-            ) : !hasMore ? (
-              <Text style={{ color: colors.text.inverse, textAlign: 'center' }}>
-                No more videos to load
-              </Text>
-            ) : null}
-          </View>
-        }
-        style={styles.flatList}
-        decelerationRate="fast"
-        snapToAlignment="start"
-        snapToInterval={height}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        getItemLayout={getItemLayout}
+        pagingEnabled
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'flex-start',
-          alignItems: 'stretch'
-        }}
+        onEndReached={loadVideos}
+        onEndReachedThreshold={0.5}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews
       />
     </View>
   );
 };
 
-const HomeScreenWrapper = () => (
-  <ReelProvider>
-    <HomeScreen />
-  </ReelProvider>
-);
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  videoContainer: {
+    width,
+    height,
+    backgroundColor: '#000',
+  },
+  video: {
+    ...StyleSheet.absoluteFillObject,
+    resizeMode: 'cover',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  bottomInfoContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+  },
 
-export default HomeScreenWrapper;
+  rightActions: {
+    position: 'absolute',
+    right: 16,
+    bottom: 120,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+    padding: 12,
+    paddingBottom: 8,
+  },
+  bottomLeftContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 16,
+    right: 16,
+    zIndex: 1,
+  },
+  gradientBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    height: 'auto',
+    paddingTop: 40,
+    paddingBottom: 16,
+    marginTop: -40,
+    marginLeft: -16,
+    marginRight: -16,
+    overflow: 'hidden',
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 8,
+  },
+  profileColumn: {
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  profileInfo: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  username: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  expandedContent: {
+    marginTop: 8,
+    width: '100%',
+  },
+  caption: {
+    color: 'white',
+    fontSize: 14,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  infoText: {
+    color: 'white',
+    fontSize: 13,
+  },
+  seeMoreButton: {
+    marginTop: 4,
+  },
+  seeMoreText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    opacity: 0.9,
+  },
+  actionButton: {
+    alignItems: 'center',
+    marginBottom: 20,
+    width: 40,
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  followButton: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#0095F6',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'black',
+  },
+});
+
+export default ReelsScreen;
